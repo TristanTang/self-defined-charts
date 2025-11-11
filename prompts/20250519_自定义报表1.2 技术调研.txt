@@ -1,0 +1,52 @@
+背景：你是一个资深的全栈程序员，懂得 python3、flask、typescript、vue3、echarts 等编程技术，想在 mac 笔记本上使用 python3、flask、typescript、vue3、antdesign、echarts 来生成可视化图。
+
+数据库信息如下，数据库名称是：school_database，mysql 类型，字符集是 utf8mb4，排序规则是 utf8mb4_general_ci
+表信息如下：
+	学生表，表名为 student_info，用于记录学生信息，包含学生学号(字段是 student_id)、名称（字段是 student_name)、年级（字段是 grade），建表语句如下：
+		CREATE TABLE school_database.student_info (
+			student_id INT UNSIGNED auto_increment NOT NULL COMMENT '学生学号',
+			student_name varchar(100) NOT NULL COMMENT '学生姓名',
+			grade INT UNSIGNED DEFAULT 1 NOT NULL COMMENT '学生当前所属年级',
+			CONSTRAINT student_info_pk PRIMARY KEY (student_id)
+		)
+		ENGINE=InnoDB
+		DEFAULT CHARSET=utf8mb4
+		COLLATE=utf8mb4_general_ci COMMENT='学生信息';
+	
+	课程表，表名为 class_info，用于记录学校的课程信息，包含课程编号（字段是 class_id）、课程名（class_name)，建表语句如下：
+		CREATE TABLE school_database.class_info (
+			class_id INT NOT NULL COMMENT '课程编号',
+			class_name varchar(255) NOT NULL COMMENT '课程名称'
+		)
+		ENGINE=InnoDB
+		DEFAULT CHARSET=utf8mb4
+		COLLATE=utf8mb4_general_ci COMMENT='课程信息';
+
+
+其中，flask 接口提供2个接口：
+	接口1：返回数据库表中的所有表，以及对应字段的字段名称及注释。接口地址 uri 是 "/tables"
+	结构如： {"code":0,"tables":[{"table_name":"student_info", "table_name_cn":"学生信息表", "columns":[{"column_name":"student_id", "column_name_cn":"学生学号"},{"column_name":"student_name", "column_name_cn":"学生姓名"},{"column_name":"grade", "column_name_cn":"年级"},]}]}
+
+	接口2：用于接收下面前端页面 submit_statistics 按钮点击后的调用，地址是 "/submit_statistics"
+		参数1，table_name：用于接收传用户选中的 select1 的值(table_name);
+		参数2，statistic_column_name: 用于接收用户选中的 select2 的值(column_name)
+		参数3，statistic_function: 用于接收用户选中 select3 组件的值；
+		参数4，group_column_name：用于接收用户选中的 select4 组件的值；
+		参数5，echart_type：用于接收用户选中的 select5 组件的值（1/2/3）；
+		接口基于4个参数，动态拼接 SQL 语句：
+			其中，statistic_function 包住 statistic_column_name，用于计算，放在 select 后； table_name 放在 from 后，用于表示数据源表的表名；
+			group_column_name 用于接收用户选中的分组字段，放在 group by 后，用于对数据进行分组统计；
+
+		拼接完 SQL 语句后，使用 mysql 读写库，查询 school_database 库；
+		根据参数5中选中的组件类型（1：柱状图；2：饼状图；3：折线图），按照组件需要的格式，返回给前端；
+
+前端页面使用 vue3、typescript、antdesign、echarts 实现，有如下因素组成：
+	区域1 用于维护统计查询条件
+		第1行，左侧第一个元素是 label，值是“数据表”。第2个元素是下拉菜单（组件名称：select1），用于维护数据库表，key 是 table_name，value 是 table_name_cn；
+		第2行，左侧第一个元素是 label，值是“字段名”。第2个元素是下拉菜单（组件名称：select2），根据第一个下拉菜单的值，带出当前表的 columns。 key 是 column_name, value 是 column_name_cn；
+		第3行，左侧第一个元素是 label，值是“统计方法”。第2个元素是下拉菜单（组件名称：select3），key 和 value 一样，包含 SUM、AVERAGE、COUNT 3个选项；
+		第4行，左侧第一个元素是 label，值是“分组字段”。第2个元素是下拉菜单（组件名称：select4），根据 select1 下拉菜单的值，带出当前表的 columns。 key 是 column_name, value 是 column_name_cn。
+		第5行，左侧第一个元素是 label，值是“图表类型”。第2个元素是下拉菜单（组件名称是：select5），下拉选项有3种： 1：柱状图；2：饼图；3：折线图。
+		第5行，是一个按钮（按钮名称是：submit_statistics)，点击按钮后，调用 flask 接口2将用户选中的 4个下拉菜单的 key 传到接口中。
+
+	区域2 用于接收后端接口2返回的查询结果，根据用户选择的图表，渲染出图表结果。

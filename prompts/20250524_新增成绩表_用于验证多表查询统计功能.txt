@@ -1,0 +1,18 @@
+数据库中新增了一张成绩表(表名是：score_info)，用于描述各位学生在各课程中的得分。
+表结构如下：
+	课程编号（字段名是：class_id)，对应课程表(表名是：class_info) 中的课程编号（字段名是：class_id）
+	学生学号（字段名是：student_id)，对应学生信息表（表名：student_info)中的学生学号（字段名是：student_id)
+	成绩（字段名是：score，类型：int），表示该学生在该课程的得分。
+
+建表语句如下：
+	CREATE TABLE school_database.score_info (
+	class_id INT UNSIGNED NOT NULL COMMENT '课程编号',
+	student_id INT UNSIGNED NOT NULL COMMENT '学生学号',
+	score INT UNSIGNED NOT NULL COMMENT '课程成绩'
+)
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_general_ci
+COMMENT='成绩表';
+
+
